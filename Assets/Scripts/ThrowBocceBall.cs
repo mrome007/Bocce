@@ -5,7 +5,8 @@ using UnityEngine;
 public class ThrowBocceBall : MonoBehaviour 
 {
 	public BocceBallInfo Pallino;
-	public BocceBallInfo BocceBall;
+	public BocceBallInfo BocceBallPlayerOne;
+	public BocceBallInfo BocceBallPlayerTwo;
 
 	public event EventHandler<BocceEventArgs> ThrowComplete;
 
@@ -17,7 +18,8 @@ public class ThrowBocceBall : MonoBehaviour
 		var randomZ = UnityEngine.Random.Range(-10f, 40f);
 		if(turn > 0)
 		{
-			currentBocceBall = (BocceBallInfo)Instantiate(BocceBall, new Vector3(randomX, 1.15f, randomZ), Quaternion.identity);
+			currentBocceBall = (BocceBallInfo)Instantiate(player ? BocceBallPlayerOne : BocceBallPlayerTwo, new Vector3(randomX, 1.15f, randomZ), Quaternion.identity);
+			currentBocceBall.BoccePlayer = player;
 		}
 		else
 		{
