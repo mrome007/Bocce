@@ -27,6 +27,12 @@ public class ThrowBocceBall : MonoBehaviour
 	[SerializeField]
 	private BocceBallInfo playerTwoBocceBall;
 
+	/// <summary>
+	/// The bocce ball aim transform.
+	/// </summary>
+	[SerializeField]
+	private Transform BocceBallAimTransform;
+
 	#endregion
 
 	#region Events
@@ -47,6 +53,18 @@ public class ThrowBocceBall : MonoBehaviour
 
 	#endregion
 
+	public enum ThrowMode
+	{
+		NOTHROW,
+		AIM,
+		THROW
+	}
+
+	private ThrowMode currentThrowMode = ThrowMode.NOTHROW;
+	private float timerThrow = 0.65f;
+	private float pallinoForce = 40f;
+	private float bocceBallForce = 200f;
+	private float currentForce;
 	#region Throw methods
 
 	/// <summary>
@@ -56,22 +74,19 @@ public class ThrowBocceBall : MonoBehaviour
 	/// <param name="player">Used to determine which Player's Bocce ball to throw. PLAYER ONE or PLAYER TWO.</param>
 	public void StartThrow(int turn, BocceTurnsManager.Player player)
 	{
-		//Temporary for now. Just using set position.
-		var randomX = UnityEngine.Random.Range(-6f, 6f);
-		var randomZ = UnityEngine.Random.Range(-10f, 40f);
-
 		if(turn > 0)
 		{
 			currentBocceBall = (BocceBallInfo)Instantiate(player == BocceTurnsManager.Player.PLAYER1 ? playerOneBocceBall : playerTwoBocceBall, 
-			                                              new Vector3(randomX, 1.15f, randomZ), Quaternion.identity);
+			                                              new Vector3(0f, 1.15f, -14.5f), Quaternion.identity);
 			currentBocceBall.BoccePlayer = player;
+			currentForce = bocceBallForce;
 		}
 		else
 		{
-			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(randomX, 0.75f,randomZ), Quaternion.identity);
+			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(0, 1f,-14.5f), Quaternion.identity);
+			currentForce = pallinoForce;
 		}
-
-		StartCoroutine(TemporaryThrow());
+		currentThrowMode = ThrowMode.AIM;
 	}
 
 	/// <summary>
@@ -79,6 +94,9 @@ public class ThrowBocceBall : MonoBehaviour
 	/// </summary>
 	private void EndThrow()
 	{
+		currentThrowMode = ThrowMode.NOTHROW;
+		timerThrow = 0.65f;
+
 		var handler = ThrowComplete;
 		if(handler != null)
 		{
@@ -92,8 +110,54 @@ public class ThrowBocceBall : MonoBehaviour
 	/// <returns>The throw.</returns>
 	private IEnumerator TemporaryThrow()
 	{
-		yield return new WaitForSeconds(2f);
+		//This is just to wait for every ball to stop.
+		yield return new WaitForSeconds(10f);
 		EndThrow();
+	}
+
+	#endregion
+
+	#region Monobehaviour methods
+
+	private void Update()
+	{
+		if(currentThrowMode == ThrowMode.AIM)
+		{
+			if(Input.GetKeyDown(KeyCode.Space))
+			{
+				currentThrowMode = ThrowMode.THROW;
+			}
+		}
+	}
+
+	private void FixedUpdate()
+	{
+		if(currentThrowMode == ThrowMode.AIM)
+		{
+			var position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50f));
+			position.y = 0.75f;
+
+			Debug.DrawLine(currentBocceBall.transform.position, position);
+			currentBocceBall.transform.LookAt(position);
+			BocceBallAimTransform.LookAt(position);
+		}
+		else if(currentThrowMode == ThrowMode.THROW)
+		{
+			if(timerThrow >= 0)
+			{
+				timerThrow -= Time.deltaTime;
+				currentBocceBall.BocceBallRigidBody.AddForce(BocceBallAimTransform.forward * currentForce);
+			}
+			else
+			{
+				currentThrowMode = ThrowMode.NOTHROW; 
+				StartCoroutine(TemporaryThrow());
+			}
+		}
+		else
+		{
+
+		}
 	}
 
 	#endregion

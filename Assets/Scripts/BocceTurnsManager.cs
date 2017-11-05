@@ -163,7 +163,6 @@ public class BocceTurnsManager : MonoBehaviour
 		if(PlayerOneScore >= 7 || PlayerTwoScore >= 7)
 		{
 			Debug.Log("GAME OVER");
-			Application.LoadLevel(0);
 		}
 		else
 		{

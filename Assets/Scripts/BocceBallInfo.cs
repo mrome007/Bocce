@@ -15,4 +15,18 @@ public class BocceBallInfo : MonoBehaviour
 	/// Gets or sets the distance from pallino.
 	/// </summary>
 	public float DistanceFromPallino { get; set; }
+
+	/// <summary>
+	/// Gets the bocce ball rigid body.
+	/// </summary>
+	/// <value>The bocce ball rigid body.</value>
+	public Rigidbody BocceBallRigidBody{ get; private set; }
+
+	/// <summary>
+	/// Unity Awake method.
+	/// </summary>
+	private void Awake()
+	{
+		BocceBallRigidBody = GetComponent<Rigidbody>();
+	}
 }
