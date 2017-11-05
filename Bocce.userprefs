@@ -1,10 +1,10 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/BocceTurnsManager.cs">
     <Files>
       <File FileName="Assets/Scripts/BocceBallInfo.cs" Line="12" Column="23" />
       <File FileName="Assets/Scripts/ThrowBocceBall.cs" Line="66" Column="50" />
-      <File FileName="Assets/Scripts/BocceTurnsManager.cs" Line="254" Column="68" />
+      <File FileName="Assets/Scripts/BocceTurnsManager.cs" Line="161" Column="31" />
       <File FileName="Assets/Scripts/BocceEventArgs.cs" Line="6" Column="70" />
     </Files>
   </MonoDevelop.Ide.Workbench>

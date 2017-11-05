@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Runs through player turns of a Bocce game.
@@ -67,11 +68,15 @@ public class BocceTurnsManager : MonoBehaviour
 
 	#endregion
 
-
-
 	//Score
 	private int PlayerOneScore = 0;
 	private int PlayerTwoScore = 0;
+
+	public Text PlayerOneScoreText;
+	public Text PlayerTwoScoreText;
+
+	private string playerTurnFormat = "PLAYER {0}'S TURN";
+	public Text PlayerTurnText;
 
 	#region MonoBehaviour methods
 
@@ -158,6 +163,7 @@ public class BocceTurnsManager : MonoBehaviour
 		if(PlayerOneScore >= 7 || PlayerTwoScore >= 7)
 		{
 			Debug.Log("GAME OVER");
+			Application.LoadLevel(0);
 		}
 		else
 		{
@@ -230,6 +236,18 @@ public class BocceTurnsManager : MonoBehaviour
 				PlayerTwoScore++;
 			}
 		}
+		UpdateScoreText();
+	}
+
+	private void UpdateScoreText()
+	{
+		PlayerOneScoreText.text = PlayerOneScore.ToString();
+		PlayerTwoScoreText.text = PlayerTwoScore.ToString();
+	}
+
+	private void UpdateTurnText()
+	{
+		PlayerTurnText.text = string.Format(playerTurnFormat, currentPlayer == Player.PLAYER1 ? "ONE" : "TWO");
 	}
 
 	/// <summary>
@@ -278,6 +296,8 @@ public class BocceTurnsManager : MonoBehaviour
 			numberOfPlayerTwoMembers--;
 		}
 		throwBallComponent.StartThrow(currentTurn, currentPlayer);
+
+		UpdateTurnText();
 	}
 
 	/// <summary>
