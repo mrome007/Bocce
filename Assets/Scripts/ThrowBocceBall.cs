@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Class that handles throwing the Bocce Ball.
@@ -57,14 +58,19 @@ public class ThrowBocceBall : MonoBehaviour
 	{
 		NOTHROW,
 		AIM,
+		FIRE,
 		THROW
 	}
 
 	private ThrowMode currentThrowMode = ThrowMode.NOTHROW;
 	private float timerThrow = 0.65f;
-	private float pallinoForce = 40f;
-	private float bocceBallForce = 200f;
+	private float pallinoForce = 100f;
+	private float bocceBallForce = 500f;
 	private float currentForce;
+
+	public Slider ForceMeter;
+	private float forceValue = 1f;
+	private float forceIncrement = 1f;
 	#region Throw methods
 
 	/// <summary>
@@ -125,7 +131,15 @@ public class ThrowBocceBall : MonoBehaviour
 		{
 			if(Input.GetKeyDown(KeyCode.Space))
 			{
+				currentThrowMode = ThrowMode.FIRE;
+			}
+		}
+		else if(currentThrowMode == ThrowMode.FIRE)
+		{
+			if(Input.GetKeyDown(KeyCode.Space))
+			{
 				currentThrowMode = ThrowMode.THROW;
+				currentForce = (forceValue / 100f) * currentForce;
 			}
 		}
 	}
@@ -134,12 +148,33 @@ public class ThrowBocceBall : MonoBehaviour
 	{
 		if(currentThrowMode == ThrowMode.AIM)
 		{
+			ForceMeter.value = 1f;
+			forceValue = 1f;
+			forceIncrement = 1f;
+
 			var position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50f));
 			position.y = 0.75f;
 
 			Debug.DrawLine(currentBocceBall.transform.position, position);
 			currentBocceBall.transform.LookAt(position);
 			BocceBallAimTransform.LookAt(position);
+		}
+		else if(currentThrowMode == ThrowMode.FIRE)
+		{
+			forceIncrement += 0.125f * Mathf.Sign(forceIncrement);
+			forceValue += forceIncrement;
+			if(forceValue >= 100f)
+			{
+				forceIncrement = 1f;
+				forceIncrement *= -1;
+			}
+			else if(forceValue <= 0)
+			{
+				forceIncrement = -1f;
+				forceIncrement *= -1;
+			}
+
+			ForceMeter.value = forceValue;
 		}
 		else if(currentThrowMode == ThrowMode.THROW)
 		{
