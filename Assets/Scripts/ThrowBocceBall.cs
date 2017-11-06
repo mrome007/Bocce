@@ -119,6 +119,18 @@ public class ThrowBocceBall : MonoBehaviour
 	[SerializeField]
 	private LineRenderer aimLine;
 
+	/// <summary>
+	/// The fire mode text.
+	/// </summary>
+	[SerializeField]
+	private Text FireModeText;
+
+	/// <summary>
+	/// The throw mode text.
+	/// </summary>
+	[SerializeField]
+	private Text ThrowModeText;
+
 	#endregion
 
 	#region Throw methods
@@ -236,6 +248,9 @@ public class ThrowBocceBall : MonoBehaviour
 	/// </summary>
 	private void Aim()
 	{
+		DisableThrowTexts();
+		FireModeText.gameObject.SetActive(true);
+
 		forceMeter.value = 1f;
 		forceSliderValue = 1f;
 		forceIncrement = 1f;
@@ -255,6 +270,9 @@ public class ThrowBocceBall : MonoBehaviour
 	/// </summary>
 	private void Fire()
 	{
+		DisableThrowTexts();
+		ThrowModeText.gameObject.SetActive(true);
+
 		forceMeter.gameObject.SetActive(true);
 
 		forceIncrement += 0.125f * Mathf.Sign(forceIncrement);
@@ -278,6 +296,8 @@ public class ThrowBocceBall : MonoBehaviour
 	/// </summary>
 	private void Throw()
 	{
+		DisableThrowTexts();
+
 		if(timerThrow >= 0)
 		{
 			timerThrow -= Time.deltaTime;
@@ -289,6 +309,15 @@ public class ThrowBocceBall : MonoBehaviour
 			currentThrowMode = ThrowMode.NOTHROW; 
 			StartCoroutine(TemporaryThrow());
 		}
+	}
+
+	/// <summary>
+	/// Disables the throw texts.
+	/// </summary>
+	private void DisableThrowTexts()
+	{
+		FireModeText.gameObject.SetActive(false);
+		ThrowModeText.gameObject.SetActive(false);
 	}
 
 	#endregion
