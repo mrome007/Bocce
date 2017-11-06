@@ -138,7 +138,7 @@ public class BocceScore : MonoBehaviour
 	/// </summary>
 	private void CheckEndGame()
 	{
-		if(PlayerOneScore >= 2 || PlayerTwoScore >= 2)
+		if(PlayerOneScore >= 7 || PlayerTwoScore >= 7)
 		{
 			GameOverText.gameObject.SetActive(true);
 			GameOverText.text = string.Format(GameOverTextFormat, PlayerOneScore > PlayerTwoScore ? "PLAYER ONE" : "PLAYER TWO");
@@ -155,6 +155,10 @@ public class BocceScore : MonoBehaviour
 		PlayerTwoScoreText.text = PlayerTwoScore.ToString();
 	}
 
+	/// <summary>
+	/// Holds the score for game over.
+	/// </summary>
+	/// <returns>The score for game over.</returns>
 	private IEnumerator HoldScoreForGameOver()
 	{
 		yield return new WaitForSeconds(4f);
