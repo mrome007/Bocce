@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,12 +30,31 @@ public class BocceTurnsManager : MonoBehaviour
 	
 	#endregion
 
+	#region Events
+
+	/// <summary>
+	/// Occurs when game started.
+	/// </summary>
+	public event EventHandler GameStarted;
+
+	/// <summary>
+	/// Occurs when game ended.
+	/// </summary>
+	public event EventHandler GameEnded;
+
+	#endregion
+
 	#region Private Fields
 
 	/// <summary>
 	/// The ThrowBocceBall component.
 	/// </summary>
 	private ThrowBocceBall throwBallComponent;
+
+	/// <summary>
+	/// The bocce balls manager.
+	/// </summary>
+	private BocceBallsManager bocceBallsManager;
 
 	/// <summary>
 	/// The number of PLAYER ONE members.
@@ -57,26 +77,26 @@ public class BocceTurnsManager : MonoBehaviour
 	private Player currentPlayer;
 
 	/// <summary>
-	/// The bocce balls thrown.
+	/// The take A break coroutine.
 	/// </summary>
-	private List<BocceBallInfo> BocceBalls;
-
-	/// <summary>
-	/// The pallino.
-	/// </summary>
-	private BocceBallInfo Pallino;
+	private Coroutine takeABreakCoroutine;
 
 	#endregion
 
-	//Score
-	private int PlayerOneScore = 0;
-	private int PlayerTwoScore = 0;
+	#region UI elements for turns manager
 
-	public Text PlayerOneScoreText;
-	public Text PlayerTwoScoreText;
-
+	/// <summary>
+	/// The player turn string format.
+	/// </summary>
 	private string playerTurnFormat = "PLAYER {0}'S TURN";
-	public Text PlayerTurnText;
+
+	/// <summary>
+	/// The player turn text.
+	/// </summary>
+	[SerializeField]
+	private Text PlayerTurnText;
+
+	#endregion
 
 	#region MonoBehaviour methods
 
@@ -91,14 +111,23 @@ public class BocceTurnsManager : MonoBehaviour
 			Debug.LogError("No Throw Bocce Ball Component");
 		}
 
-		BocceBalls = new List<BocceBallInfo>();
-		Pallino = null;
+		bocceBallsManager = GetComponent<BocceBallsManager>();
+		if(bocceBallsManager == null)
+		{
+			Debug.LogError("No Bocce Balls Manager");
+		}
+
+		if(numberOfPlayers % 2 != 0)
+		{
+			numberOfPlayers++;
+		}
 
 		numberOfPlayerOneMembers = numberOfPlayers / 2;
 		numberOfPlayerTwoMembers = numberOfPlayers / 2;
 
 		currentTurn = 0;
 		currentPlayer = Player.PLAYER1;
+		takeABreakCoroutine = null;
 	}
 
 	/// <summary>
@@ -106,7 +135,15 @@ public class BocceTurnsManager : MonoBehaviour
 	/// </summary>
 	private void Start()
 	{
-		StartGame();
+		InitializeBocceGame();
+	}
+
+	/// <summary>
+	/// Unity OnDestroy method.
+	/// </summary>
+	private void OnDestroy()
+	{
+		throwBallComponent.ThrowComplete -= HandleThrowComplete;
 	}
 
 	#endregion
@@ -122,14 +159,8 @@ public class BocceTurnsManager : MonoBehaviour
 	/// <param name="e">BocceEventArgs contains info regarding ball thrown.</param>
 	private void HandleThrowComplete(object sender, BocceEventArgs e)
 	{
-		if(currentTurn > 0)
-		{
-			BocceBalls.Add(e.BocceBallInfo);
-		}
-		else
-		{
-			Pallino = e.BocceBallInfo;
-		}
+
+		bocceBallsManager.AddBocceBalls(currentTurn == 0, e.BocceBallInfo);
 
 		DetermineNextTurn();
 	}
@@ -139,12 +170,32 @@ public class BocceTurnsManager : MonoBehaviour
 	#region Helpers
 
 	/// <summary>
+	/// Initializes the bocce game.
+	/// </summary>
+	public void InitializeBocceGame()
+	{
+		if(takeABreakCoroutine != null)
+		{
+			StopCoroutine(takeABreakCoroutine);
+		}
+
+		StartGame();
+
+		var handler = GameStarted;
+		if(handler != null)
+		{
+			handler(this, null);
+		}
+	}
+
+	/// <summary>
 	/// Starts the game.
 	/// </summary>
 	private void StartGame()
 	{
 		ResetGame();
 		SetCurrentPlayer();
+		UpdateTurnText();
 
 		throwBallComponent.ThrowComplete += HandleThrowComplete;
 		throwBallComponent.StartThrow(currentTurn, currentPlayer);
@@ -156,17 +207,13 @@ public class BocceTurnsManager : MonoBehaviour
 	private void EndGame()
 	{
 		throwBallComponent.ThrowComplete -= HandleThrowComplete;
-		ScoreGame();
-		Debug.Log("Ending Game");
-		Debug.Log(string.Format("Scores - Player1: {0}---Player2: {1}", PlayerOneScore, PlayerTwoScore));
 
-		if(PlayerOneScore >= 7 || PlayerTwoScore >= 7)
+		takeABreakCoroutine = StartCoroutine(TakeABreak());
+
+		var handler = GameEnded;
+		if(handler != null)
 		{
-			Debug.Log("GAME OVER");
-		}
-		else
-		{
-			StartCoroutine(TakeABreak());
+			handler(this, null);
 		}
 	}
 
@@ -181,67 +228,7 @@ public class BocceTurnsManager : MonoBehaviour
 		numberOfPlayerOneMembers = numberOfPlayers / 2;
 		numberOfPlayerTwoMembers = numberOfPlayers / 2;
 		
-		foreach(var ball in BocceBalls)
-		{
-			Destroy(ball.gameObject);
-		}
-		BocceBalls.Clear();
-		
-		if(Pallino != null)
-		{
-			Destroy(Pallino.gameObject);
-			Pallino = null;
-		}
-	}
-
-	/// <summary>
-	/// Figures out the Bocce Balls' distances from the Pallino.
-	/// and sorts them in ascending order based on their distance
-	/// from the Pallino.
-	/// </summary>
-	private void SetDistancesFromPallino()
-	{
-		if(Pallino != null && BocceBalls.Count > 0)
-		{
-			foreach(var ball in BocceBalls)
-			{
-				ball.DistanceFromPallino = Vector3.Distance(Pallino.transform.position, ball.transform.position);
-			}
-			BocceBalls = BocceBalls.OrderBy(ballInfo => ballInfo.DistanceFromPallino).ToList();
-		}
-	}
-
-	/// <summary>
-	/// Scores the game.
-	/// </summary>
-	private void ScoreGame()
-	{
-		SetDistancesFromPallino();
-
-		var playerAhead = BocceBalls.FirstOrDefault ().BoccePlayer;
-		foreach(var ball in BocceBalls)
-		{
-			if(playerAhead != ball.BoccePlayer)
-			{
-				break;
-			}
-
-			if(playerAhead == Player.PLAYER1)
-			{
-				PlayerOneScore++;
-			}
-			else
-			{
-				PlayerTwoScore++;
-			}
-		}
-		UpdateScoreText();
-	}
-
-	private void UpdateScoreText()
-	{
-		PlayerOneScoreText.text = PlayerOneScore.ToString();
-		PlayerTwoScoreText.text = PlayerTwoScore.ToString();
+		bocceBallsManager.ClearBocceBalls();
 	}
 
 	private void UpdateTurnText()
@@ -265,10 +252,10 @@ public class BocceTurnsManager : MonoBehaviour
 			return Player.PLAYER1;
 		}
 		
-		SetDistancesFromPallino();
+		var closestBall = bocceBallsManager.ClosestBallFromPallino();
 		
 		//return the team which does not have their ball closest to the pallino.
-		return GetOpposingPlayer(BocceBalls.FirstOrDefault().BoccePlayer);
+		return GetOpposingPlayer(closestBall.BoccePlayer);
 	}
 
 	/// <summary>
@@ -340,7 +327,7 @@ public class BocceTurnsManager : MonoBehaviour
 	/// <returns>The random player.</returns>
 	private Player GetRandomPlayer()
 	{
-		return Random.Range(0,2) == 0 ? Player.PLAYER1 : Player.PLAYER2;
+		return UnityEngine.Random.Range(0,2) == 0 ? Player.PLAYER1 : Player.PLAYER2;
 	}
 
 	/// <summary>
@@ -349,7 +336,6 @@ public class BocceTurnsManager : MonoBehaviour
 	/// <returns>The A break.</returns>
 	private IEnumerator TakeABreak()
 	{
-		Debug.Log("Taking a break");
 		yield return new WaitForSeconds(5f);
 		StartGame();
 	}

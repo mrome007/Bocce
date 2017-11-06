@@ -45,15 +45,8 @@ public class ThrowBocceBall : MonoBehaviour
 
 	#endregion
 
-	#region Private fields
-
-	/// <summary>
-	/// The current bocce ball being thrown.
-	/// </summary>
-	private BocceBallInfo currentBocceBall = null;
-
-	#endregion
-
+	#region ThrowMode enum
+	
 	public enum ThrowMode
 	{
 		NOTHROW,
@@ -62,15 +55,72 @@ public class ThrowBocceBall : MonoBehaviour
 		THROW
 	}
 
+	#endregion
+
+	#region Private fields
+
+	/// <summary>
+	/// The current bocce ball being thrown.
+	/// </summary>
+	private BocceBallInfo currentBocceBall = null;
+
+	/// <summary>
+	/// The current throw mode.
+	/// </summary>
 	private ThrowMode currentThrowMode = ThrowMode.NOTHROW;
+
+	#endregion
+
+	#region Force variables
+
+	/// <summary>
+	/// The timer for throwing ball.
+	/// </summary>
 	private float timerThrow = 0.65f;
+
+	/// <summary>
+	/// Maximum force put on pallino.
+	/// </summary>
 	private float pallinoForce = 100f;
+
+	/// <summary>
+	/// Maximum force put on Bocce ball.
+	/// </summary>
 	private float bocceBallForce = 500f;
+
+	/// <summary>
+	/// Current force used.
+	/// </summary>
 	private float currentForce;
 
-	public Slider ForceMeter;
-	private float forceValue = 1f;
+	/// <summary>
+	/// The value used by Slider.
+	/// </summary>
+	private float forceSliderValue = 1f;
+
+	/// <summary>
+	/// The increment value for Slider to animate up/down.
+	/// </summary>
 	private float forceIncrement = 1f;
+
+	#endregion
+
+	#region UI element for aiming
+
+	/// <summary>
+	/// Slider to determine force used.
+	/// </summary>
+	[SerializeField]
+	private Slider forceMeter;
+
+	/// <summary>
+	/// Line for aiming bocce balls.
+	/// </summary>
+	[SerializeField]
+	private LineRenderer aimLine;
+
+	#endregion
+
 	#region Throw methods
 
 	/// <summary>
@@ -89,7 +139,7 @@ public class ThrowBocceBall : MonoBehaviour
 		}
 		else
 		{
-			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(0, 1f,-14.5f), Quaternion.identity);
+			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(0, 0.75f,-14.5f), Quaternion.identity);
 			currentForce = pallinoForce;
 		}
 		currentThrowMode = ThrowMode.AIM;
@@ -100,6 +150,9 @@ public class ThrowBocceBall : MonoBehaviour
 	/// </summary>
 	private void EndThrow()
 	{
+		aimLine.enabled = false;
+		forceMeter.gameObject.SetActive(false);
+
 		currentThrowMode = ThrowMode.NOTHROW;
 		timerThrow = 0.65f;
 
@@ -125,7 +178,41 @@ public class ThrowBocceBall : MonoBehaviour
 
 	#region Monobehaviour methods
 
+	/// <summary>
+	/// Unity Update method.
+	/// </summary>
 	private void Update()
+	{
+		ThrowBallInput();
+	}
+
+	/// <summary>
+	/// Unity FixedUpdate method.
+	/// </summary>
+	private void FixedUpdate()
+	{
+		if(currentThrowMode == ThrowMode.AIM)
+		{
+			Aim();
+		}
+		else if(currentThrowMode == ThrowMode.FIRE)
+		{
+			Fire();
+		}
+		else if(currentThrowMode == ThrowMode.THROW)
+		{
+			Throw();
+		}
+	}
+
+	#endregion
+
+	#region Helpers
+
+	/// <summary>
+	/// Input detection for throwing bocce balls.
+	/// </summary>
+	private void ThrowBallInput()
 	{
 		if(currentThrowMode == ThrowMode.AIM)
 		{
@@ -139,59 +226,68 @@ public class ThrowBocceBall : MonoBehaviour
 			if(Input.GetKeyDown(KeyCode.Space))
 			{
 				currentThrowMode = ThrowMode.THROW;
-				currentForce = (forceValue / 100f) * currentForce;
+				currentForce *= (forceSliderValue / 100f);
 			}
 		}
 	}
 
-	private void FixedUpdate()
+	/// <summary>
+	/// Method for aiming bocce ball.
+	/// </summary>
+	private void Aim()
 	{
-		if(currentThrowMode == ThrowMode.AIM)
+		forceMeter.value = 1f;
+		forceSliderValue = 1f;
+		forceIncrement = 1f;
+		
+		var position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50f));
+		position.y = currentBocceBall.transform.position.y;
+		
+		currentBocceBall.transform.LookAt(position);
+		BocceBallAimTransform.LookAt(position);
+		
+		aimLine.enabled = true;
+		aimLine.SetPosition(0, new Vector3(position.x, 1f, position.z));
+	}
+
+	/// <summary>
+	/// Method for firing the bocce ball.
+	/// </summary>
+	private void Fire()
+	{
+		forceMeter.gameObject.SetActive(true);
+
+		forceIncrement += 0.125f * Mathf.Sign(forceIncrement);
+		forceSliderValue += forceIncrement;
+		if(forceSliderValue >= 100f)
 		{
-			ForceMeter.value = 1f;
-			forceValue = 1f;
 			forceIncrement = 1f;
-
-			var position = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50f));
-			position.y = 0.75f;
-
-			Debug.DrawLine(currentBocceBall.transform.position, position);
-			currentBocceBall.transform.LookAt(position);
-			BocceBallAimTransform.LookAt(position);
+			forceIncrement *= -1;
 		}
-		else if(currentThrowMode == ThrowMode.FIRE)
+		else if(forceSliderValue <= 0)
 		{
-			forceIncrement += 0.125f * Mathf.Sign(forceIncrement);
-			forceValue += forceIncrement;
-			if(forceValue >= 100f)
-			{
-				forceIncrement = 1f;
-				forceIncrement *= -1;
-			}
-			else if(forceValue <= 0)
-			{
-				forceIncrement = -1f;
-				forceIncrement *= -1;
-			}
-
-			ForceMeter.value = forceValue;
+			forceIncrement = -1f;
+			forceIncrement *= -1;
 		}
-		else if(currentThrowMode == ThrowMode.THROW)
+		
+		forceMeter.value = forceSliderValue;
+	}
+
+	/// <summary>
+	/// Method when bocce ball is thrown.
+	/// </summary>
+	private void Throw()
+	{
+		if(timerThrow >= 0)
 		{
-			if(timerThrow >= 0)
-			{
-				timerThrow -= Time.deltaTime;
-				currentBocceBall.BocceBallRigidBody.AddForce(BocceBallAimTransform.forward * currentForce);
-			}
-			else
-			{
-				currentThrowMode = ThrowMode.NOTHROW; 
-				StartCoroutine(TemporaryThrow());
-			}
+			timerThrow -= Time.deltaTime;
+			currentBocceBall.BocceBallRigidBody.AddForce(BocceBallAimTransform.forward * currentForce);
 		}
 		else
 		{
-
+			aimLine.enabled = false;
+			currentThrowMode = ThrowMode.NOTHROW; 
+			StartCoroutine(TemporaryThrow());
 		}
 	}
 
