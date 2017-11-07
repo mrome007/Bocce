@@ -27,11 +27,6 @@ public class BocceScore : MonoBehaviour
 	private Text GameOverText;
 
 	/// <summary>
-	/// The balls manager.
-	/// </summary>
-	private BocceBallsManager ballsManager;
-
-	/// <summary>
 	/// The turns manager.
 	/// </summary>
 	private BocceTurnsManager turnsManager;
@@ -56,12 +51,6 @@ public class BocceScore : MonoBehaviour
 	/// </summary>
 	private void Awake()
 	{
-		ballsManager = GetComponent<BocceBallsManager>();
-		if(ballsManager == null)
-		{
-			Debug.LogError("No BocceBallsManager");
-		}
-
 		turnsManager = GetComponent<BocceTurnsManager>();
 		if(turnsManager == null)
 		{
@@ -107,8 +96,8 @@ public class BocceScore : MonoBehaviour
 	/// </summary>
 	private void ScoreGame()
 	{
-		var closest = ballsManager.ClosestBallFromPallino().BoccePlayer.ToString().Contains("1");
-		var closestTeamCount = ballsManager.NumberOfTeamMembersClosestToPallino();
+		var closest = BocceBallsUtility.ClosestBallFromPallino().BoccePlayer.ToString().Contains("1");
+		var closestTeamCount = BocceBallsUtility.NumberOfTeamMembersClosestToPallino();
 		if(closest)
 		{
 			PlayerOneScore += closestTeamCount;

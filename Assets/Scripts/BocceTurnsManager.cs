@@ -18,6 +18,12 @@ public class BocceTurnsManager : MonoBehaviour
 	[SerializeField]
 	private int numberOfPlayers = 8;
 
+	/// <summary>
+	/// The pallino camera.
+	/// </summary>
+	[SerializeField]
+	private Camera pallinoCamera;
+
 	#endregion
 
 	#region Player enum
@@ -50,11 +56,6 @@ public class BocceTurnsManager : MonoBehaviour
 	/// The ThrowBocceBall component.
 	/// </summary>
 	private ThrowBocceBall throwBallComponent;
-
-	/// <summary>
-	/// The bocce balls manager.
-	/// </summary>
-	private BocceBallsManager bocceBallsManager;
 
 	/// <summary>
 	/// The number of PLAYER ONE members.
@@ -111,12 +112,6 @@ public class BocceTurnsManager : MonoBehaviour
 			Debug.LogError("No Throw Bocce Ball Component");
 		}
 
-		bocceBallsManager = GetComponent<BocceBallsManager>();
-		if(bocceBallsManager == null)
-		{
-			Debug.LogError("No Bocce Balls Manager");
-		}
-
 		if(numberOfPlayers % 2 != 0)
 		{
 			numberOfPlayers++;
@@ -159,9 +154,6 @@ public class BocceTurnsManager : MonoBehaviour
 	/// <param name="e">BocceEventArgs contains info regarding ball thrown.</param>
 	private void HandleThrowComplete(object sender, BocceEventArgs e)
 	{
-
-		bocceBallsManager.AddBocceBalls(currentTurn == 0, e.BocceBallInfo);
-
 		DetermineNextTurn();
 	}
 
@@ -174,6 +166,8 @@ public class BocceTurnsManager : MonoBehaviour
 	/// </summary>
 	public void InitializeBocceGame()
 	{
+		pallinoCamera.enabled = false;
+
 		if(takeABreakCoroutine != null)
 		{
 			StopCoroutine(takeABreakCoroutine);
@@ -193,6 +187,8 @@ public class BocceTurnsManager : MonoBehaviour
 	/// </summary>
 	private void StartGame()
 	{
+		pallinoCamera.enabled = false;
+
 		ResetGame();
 		SetCurrentPlayer();
 		UpdateTurnText();
@@ -207,6 +203,12 @@ public class BocceTurnsManager : MonoBehaviour
 	private void EndGame()
 	{
 		throwBallComponent.ThrowComplete -= HandleThrowComplete;
+
+		//Just an added bonus to see who the closest balls are to the pallino at the end of a round.
+		var pallinoCamPosition = BocceBallsUtility.PallinoLocation();
+		pallinoCamPosition.y = pallinoCamera.transform.position.y;
+		pallinoCamera.transform.position = pallinoCamPosition;
+		pallinoCamera.enabled = true;
 
 		takeABreakCoroutine = StartCoroutine(TakeABreak());
 
@@ -228,7 +230,7 @@ public class BocceTurnsManager : MonoBehaviour
 		numberOfPlayerOneMembers = numberOfPlayers / 2;
 		numberOfPlayerTwoMembers = numberOfPlayers / 2;
 		
-		bocceBallsManager.ClearBocceBalls();
+		BocceBallsUtility.ClearBocceBalls();
 	}
 
 	private void UpdateTurnText()
@@ -252,7 +254,7 @@ public class BocceTurnsManager : MonoBehaviour
 			return Player.PLAYER1;
 		}
 		
-		var closestBall = bocceBallsManager.ClosestBallFromPallino();
+		var closestBall = BocceBallsUtility.ClosestBallFromPallino();
 		
 		//return the team which does not have their ball closest to the pallino.
 		return GetOpposingPlayer(closestBall.BoccePlayer);

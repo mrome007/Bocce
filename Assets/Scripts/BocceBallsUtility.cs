@@ -7,31 +7,22 @@ using UnityEngine.UI;
 /// <summary>
 /// Bocce balls manager.
 /// </summary>
-public class BocceBallsManager : MonoBehaviour
+public class BocceBallsUtility : MonoBehaviour
 {
 	/// <summary>
 	/// The pallino.
 	/// </summary>
-	private BocceBallInfo Pallino;
+	private static BocceBallInfo Pallino = null;
 
 	/// <summary>
 	/// List of bocce balls.
 	/// </summary>
-	private List<BocceBallInfo> BocceBalls;
-
-	/// <summary>
-	/// Unity Awake method.
-	/// </summary>
-	private void Awake()
-	{
-		Pallino = null;
-		BocceBalls = new List<BocceBallInfo>();
-	}
+	private static List<BocceBallInfo> BocceBalls = new List<BocceBallInfo>();
 
 	/// <summary>
 	/// Clears the bocce balls.
 	/// </summary>
-	public void ClearBocceBalls()
+	public static void ClearBocceBalls()
 	{
 		foreach(var ball in BocceBalls)
 		{
@@ -51,7 +42,7 @@ public class BocceBallsManager : MonoBehaviour
 	/// </summary>
 	/// <param name="pallino">If true add ball to pallino, else to bocce balls</param>
 	/// <param name="ball">BocceBallInfo</param>
-	public void AddBocceBalls(bool pallino, BocceBallInfo ball)
+	public static void AddBocceBalls(bool pallino, BocceBallInfo ball)
 	{
 		if(pallino)
 		{
@@ -67,7 +58,7 @@ public class BocceBallsManager : MonoBehaviour
 	/// Closests the ball from pallino.
 	/// </summary>
 	/// <returns>The ball from pallino.</returns>
-	public BocceBallInfo ClosestBallFromPallino()
+	public static BocceBallInfo ClosestBallFromPallino()
 	{
 		SetDistancesFromPallino();
 		return BocceBalls.FirstOrDefault();
@@ -77,7 +68,7 @@ public class BocceBallsManager : MonoBehaviour
 	/// Numbers the of team members closest to pallino.
 	/// </summary>
 	/// <returns>The of team members closest to pallino.</returns>
-	public int NumberOfTeamMembersClosestToPallino()
+	public static int NumberOfTeamMembersClosestToPallino()
 	{
 		SetDistancesFromPallino();
 		
@@ -96,9 +87,49 @@ public class BocceBallsManager : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Ares the bocce balls moving.
+	/// </summary>
+	/// <returns><c>true</c>, if bocce balls moving <c>false</c> otherwise.</returns>
+	public static bool AreBocceBallsMoving()
+	{
+		var moving = false;
+		
+		if(Pallino != null || BocceBalls.Count > 0)
+		{
+			if(Pallino.BocceBallRigidBody.angularVelocity.sqrMagnitude >= 0.01f)
+			{
+				moving = true;
+			}
+
+			foreach(var ball in BocceBalls)
+			{
+				if(ball.BocceBallRigidBody.angularVelocity.sqrMagnitude >= 0.01f)
+				{
+					moving = true;
+				}
+			}
+		}
+		return moving;
+	}
+
+	/// <summary>
+	/// Pallino's location.
+	/// </summary>
+	/// <returns>The location.</returns>
+	public static Vector3 PallinoLocation()
+	{
+		var position = Vector3.zero;
+		if(Pallino != null)
+		{
+			position = Pallino.transform.position;
+		}
+		return position;
+	}
+
+	/// <summary>
 	/// Sets the distances from pallino.
 	/// </summary>
-	private void SetDistancesFromPallino()
+	private static void SetDistancesFromPallino()
 	{
 		if(Pallino != null && BocceBalls.Count > 0)
 		{

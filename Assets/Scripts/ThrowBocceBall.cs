@@ -52,7 +52,8 @@ public class ThrowBocceBall : MonoBehaviour
 		NOTHROW,
 		AIM,
 		FIRE,
-		THROW
+		THROW,
+		WAITFORSTOP
 	}
 
 	#endregion
@@ -151,9 +152,12 @@ public class ThrowBocceBall : MonoBehaviour
 		}
 		else
 		{
-			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(0, 0.75f,-14.5f), Quaternion.identity);
+			currentBocceBall = (BocceBallInfo)Instantiate(pallino, new Vector3(0, 0.925f,-14.5f), Quaternion.identity);
 			currentForce = pallinoForce;
 		}
+
+		BocceBallsUtility.AddBocceBalls(turn == 0, currentBocceBall);
+
 		currentThrowMode = ThrowMode.AIM;
 	}
 
@@ -173,17 +177,6 @@ public class ThrowBocceBall : MonoBehaviour
 		{
 			handler(this, new BocceEventArgs(currentBocceBall));
 		}
-	}
-
-	/// <summary>
-	/// Temporaries the throw.
-	/// </summary>
-	/// <returns>The throw.</returns>
-	private IEnumerator TemporaryThrow()
-	{
-		//This is just to wait for every ball to stop.
-		yield return new WaitForSeconds(10f);
-		EndThrow();
 	}
 
 	#endregion
@@ -239,6 +232,13 @@ public class ThrowBocceBall : MonoBehaviour
 			{
 				currentThrowMode = ThrowMode.THROW;
 				currentForce *= (forceSliderValue / 100f);
+			}
+		}
+		else if(currentThrowMode == ThrowMode.WAITFORSTOP)
+		{
+			if(!BocceBallsUtility.AreBocceBallsMoving())
+			{
+				EndThrow();
 			}
 		}
 	}
@@ -306,8 +306,7 @@ public class ThrowBocceBall : MonoBehaviour
 		else
 		{
 			aimLine.enabled = false;
-			currentThrowMode = ThrowMode.NOTHROW; 
-			StartCoroutine(TemporaryThrow());
+			currentThrowMode = ThrowMode.WAITFORSTOP; 
 		}
 	}
 

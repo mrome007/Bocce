@@ -1,13 +1,12 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/BocceScore.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/ThrowBocceBall.cs">
     <Files>
-      <File FileName="Assets/Scripts/BocceBallInfo.cs" Line="27" Column="16" />
-      <File FileName="Assets/Scripts/ThrowBocceBall.cs" Line="170" Column="2" />
-      <File FileName="Assets/Scripts/BocceTurnsManager.cs" Line="179" Column="37" />
+      <File FileName="Assets/Scripts/BocceTurnsManager.cs" Line="150" Column="3" />
       <File FileName="Assets/Scripts/BocceEventArgs.cs" Line="1" Column="1" />
-      <File FileName="Assets/Scripts/BocceBallsManager.cs" Line="12" Column="15" />
-      <File FileName="Assets/Scripts/BocceScore.cs" Line="139" Column="29" />
+      <File FileName="Assets/Scripts/BocceScore.cs" Line="146" Column="2" />
+      <File FileName="Assets/Scripts/BocceBallsUtility.cs" Line="106" Column="66" />
+      <File FileName="Assets/Scripts/ThrowBocceBall.cs" Line="155" Column="79" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
